@@ -19,7 +19,7 @@ import '../styles/globals.css';
 import axios from 'axios';
 
 export default function App({ Component, pageProps }: AppProps) {
-  const endpoint = 'https://fancy-daphna-fast-mainnet.helius-rpc.com/';
+  const endpoint = 'https://evocative-sparkling-leaf.solana-mainnet.quiknode.pro/79735600ada1b45856cc7a3835686c46503cef48/';
   const wallets = useMemo(
     () => [
       new SolflareWalletAdapter(),
