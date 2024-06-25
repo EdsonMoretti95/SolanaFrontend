@@ -9,10 +9,10 @@ const WalletMultiButtonDynamic = dynamic(
 
 export default function Home() {
   return (
-    <main className='flex items-center justify-center h-screen mx-11'>
-      <div className='bg-gray-300 rounded border shadow-xl min-w-full'>
-        <div className='flex items-center justify-center'>
-          <div className='mb-12 p-2'>
+    <main style={{"height" : "100vh", "width" : "100vw"}}>
+      <div style={{"height" : "100vh", "width" : "100vw"}}>
+        <div>
+          <div>
             <WalletMultiButtonDynamic />
           </div>
         </div>

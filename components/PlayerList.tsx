@@ -6,19 +6,42 @@ import {  PublicKey, ParsedAccountData, LAMPORTS_PER_SOL, Transaction, } from "@
 import { UserList, payTransaction } from '@/types/types';
 import { toast } from 'react-toastify';
 import { WalletSignTransactionError } from '@solana/wallet-adapter-base';
+import WheelComponent from './WheelComponent';
 
 export default function PlayerList() {
     const [users, setUsers] = useState<UserList[]>([]);
+    const [winner, setWinner] = useState<UserList>()
+    const [segments, setSegments] = useState<string[]>(['BrT1', 'BrT2', 'BrT3', 'BrT4', 'BrT5', 'BrT6', 'BrT7', 'BrT8', 'BrT9', 'BrT10', 'BrT11', 'BrT12'])
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
 
     const DESTINATION_WALLET = '5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn'; 
     const MINT_ADDRESS = '2hnFpwft7BRhh7fcbkqaLzXubn76jNJNSyTZwdtDpump'; 
-    const TRANSFER_AMOUNT = 50;    
+    const TRANSFER_AMOUNT = 50;  
+    
+      const segColors = [
+        '#ffffff', 
+        '#c800a5', 
+        '#ffffff', 
+        '#0486d2',
+        '#ffffff', 
+        '#c800a5', 
+        '#ffffff', 
+        '#0486d2', 
+        '#ffffff',  
+        '#c800a5',
+        '#ffffff',
+        '#0486d2',
+      ]
+      const onFinished = (winner: any) => {
+        console.log(winner);
+      }    
 
     useEffect(() => {
-        socket.on('updateUsers', (users: UserList[]) => {
-            setUsers(users);                    
+        socket.on('updateUsers', (users: UserList[]) => {            
+            setUsers(users);
+            setSegments( segments.map((s, index) => users[index] ? users[index].id : s) );
+            console.log(segments);
         });
     
         return () => {
@@ -102,13 +125,13 @@ export default function PlayerList() {
       }    
 
     return(        
-        <div>
+        <div style={{"height" : "100%", "width" : "100%"}}>
             {(publicKey ? (
                 <div>
                     <div>
                         {"Your Wallet Address = " + publicKey.toString()}
                     </div>                    
-                    <button onClick={joinGame} className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-full`}>Join</button>                    
+                    <button onClick={joinGame}>Join</button>                  
                     <ul>
                         {
                             users ? 
@@ -118,9 +141,20 @@ export default function PlayerList() {
                             :
                             ''
                         }
-                    </ul>                    
+                    </ul>                     
                 </div>
             ) : 'Not Connected')}
+      <WheelComponent
+        segments={segments}
+        segColors={segColors}
+        winningSegment={segments[5]}
+        onFinished={(winner) => onFinished(winner)}
+        primaryColor='#fa6bfa'
+        contrastColor='black'
+        upDuration={300}
+        downDuration={400}
+      />        
         </div>
+        
     );
 }
