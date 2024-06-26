@@ -225,6 +225,8 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
 
   }
 
+  WheelComponent.displayName = 'WheelComponent';  
+
   return (
     <div id="wheel">
         <canvas
