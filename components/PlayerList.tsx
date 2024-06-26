@@ -163,21 +163,9 @@ export default function PlayerList() {
                     <div>
                         {"Your Wallet Address = " + publicKey.toString()}
                     </div>                    
-                    <button onClick={joinGame}>Join</button>                  
-                    <ul>
-                        {
-                            users ? 
-                            users.map((item, index) => (
-                                <li key={index}>{`Player ${index} - ${item.id} - ${item.status}`}</li>
-                            ))
-                            :
-                            ''
-                        }
-                    </ul>                     
+                    <button onClick={joinGame}>Join</button>                    
                 </div>
             ) : 'Not Connected')}
-    <button onClick={addPlayer}>Add</button>
-    <button onClick={handleSpinClick}>Spin the wheel</button>
     <div id="wheelCircle">
       <WheelComponent
         ref={wheelRef}
