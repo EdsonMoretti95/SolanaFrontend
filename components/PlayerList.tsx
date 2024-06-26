@@ -72,7 +72,7 @@ export default function PlayerList() {
 
     useEffect(() => {
         socket.on('toast', (toast) => {
-            toast(`${toast}`);
+            toast(toast);
         });
     
         return () => {
@@ -131,56 +131,27 @@ export default function PlayerList() {
         }
       }    
 
-      const addPlayer = () => {
-        var segs = segments.slice();
-        for (let i = 0; i < segs.length; i++) {
-            const element = segs[i];
-
-            if(element.text == 'Empty'){
-                segs[i].text = i.toString();
-                setSegments(segs);
-                console.log(segments);
-                return;
-            }            
-        }
-      }
-
-      const handleSpinClick = () => {
-        console.log('ref', wheelRef);        
-        if (wheelRef.current) {            
-            wheelRef.current.spin();
-        }
-      };   
-      
-      const handleFinished = (segment: string) => {
-        console.log(`Finished! The winning segment is ${segment}`);
-      };      
-
     return(        
         <div style={{"height" : "100%", "width" : "100%"}}>
             {(publicKey ? (
                 <div>
-                    <div>
-                        {"Your Wallet Address = " + publicKey.toString()}
-                    </div>                    
-                    <button onClick={joinGame}>Join</button>                    
+                    <button onClick={joinGame} className='join-game-button'>Join Game</button>
                 </div>
-            ) : 'Not Connected')}
-    <div id="wheelCircle">
-      <WheelComponent
-        ref={wheelRef}
-        segments={segments}
-        segColors={segColors}
-        winningSegment={segments[0].text}
-        onFinished={(winner) => onFinished(winner)}
-        primaryColor="black"
-        primaryColoraround="#f797ee"
-        contrastColor="black"
-        size={250}
-        upDuration={200}
-        downDuration={5000}
-      />
-    </div>        
+            ) : 'Not Connected')}            
+            <div id="wheelCircle">
+            <WheelComponent
+                ref={wheelRef}
+                segments={segments}
+                segColors={segColors}
+                winningSegment={winner?.id ?? ''}
+                onFinished={(winner) => onFinished(winner)}
+                primaryColor="black"
+                primaryColoraround="#f797ee"
+                contrastColor="black"
+                upDuration={200}
+                downDuration={5000}
+            />
+            </div>        
         </div>
         
     );

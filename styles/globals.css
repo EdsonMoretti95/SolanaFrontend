@@ -16,3 +16,13 @@ button.wallet-adapter-button-trigger:hover {
   background-color: white !important;
   color: #ab9ff2 !important;
 }
+
+button.join-game-button {
+  cursor: pointer;
+  color: white !important;
+  border: none !important;
+  border-radius: 5% !important;
+  background-color: #ab9ff2 !important;
+  padding: 10px 20px;
+  font-size: 18px;
+}
