@@ -8,7 +8,6 @@ export interface segmentObject {
 export interface WheelComponentProps {
     segments: segmentObject[];
     segColors: string[];
-    winningSegment: string;
     onFinished: (segment: string) => void;
     primaryColor?: string;
     primaryColoraround?: string;
@@ -21,7 +20,6 @@ export interface WheelComponentProps {
 const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     segments,
     segColors,
-    winningSegment,
     onFinished,
     primaryColor,
     primaryColoraround,
@@ -31,6 +29,7 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     fontFamily = "proxima-nova"
 }, ref) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
+    const winningSegment = useRef<string>('a');;
     const [canvasSize, setCanvasSize] = useState(0);
     let currentSegment: string = "";
     let isStarted: boolean = false;
@@ -43,7 +42,7 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     const upTime: number = segments.length * upDuration;
     const downTime: number = segments.length * downDuration;
     let spinStart: number = 0;
-    let frames: number = 0;
+    let frames: number = 0;    
 
     useEffect(() => {
         const handleResize = () => {
@@ -75,7 +74,9 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
         }
     };
 
-    const spin = (): void => {
+    const spin = (winner: string): void => {
+        winningSegment.current = winner;
+        console.log('winner ' + winningSegment.current);
         isStarted = true;
         if (timerHandle === 0) {
             spinStart = new Date().getTime();
@@ -92,40 +93,40 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
         let progress = 0;
         let finished = false;
         if (duration < upTime) {
-            progress = duration / upTime;
-            angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2);
+          progress = duration / upTime;
+          angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2);
         } else {
-            if (winningSegment) {
-                if (currentSegment === winningSegment && frames > segments.length) {
-                    progress = duration / upTime;
-                    angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-                    progress = 1;
-                } else {
-                    progress = duration / downTime;
-                    angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-                }
+          if (winningSegment) {
+            if (currentSegment === winningSegment.current && frames > segments.length) {
+              progress = duration / upTime;
+              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+              progress = 1;
             } else {
-                progress = duration / downTime;
-                if (progress >= 0.8) {
-                    angleDelta = (maxSpeed / 1.2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-                } else if (progress >= 0.98) {
-                    angleDelta = (maxSpeed / 2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-                } else {
-                    angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-                }
+              progress = duration / downTime;
+              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
             }
-            if (progress >= 1) finished = true;
+          } else {
+            progress = duration / downTime;
+            if (progress >= 0.8) {
+              angleDelta = (maxSpeed / 1.2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+            } else if (progress >= 0.98) {
+              angleDelta = (maxSpeed / 2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+            } else {
+              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+            }
+          }
+          if (progress >= 1) finished = true;
         }
-
+    
         angleCurrent += angleDelta;
         while (angleCurrent >= Math.PI * 2) angleCurrent -= Math.PI * 2;
         if (finished) {
-            onFinished(currentSegment);
-            clearInterval(timerHandle as number);
-            timerHandle = 0;
-            angleDelta = 0;
+          onFinished(currentSegment);
+          clearInterval(timerHandle as number);
+          timerHandle = 0;
+          angleDelta = 0;
         }
-    };
+      };
 
     const wheelDraw = (): void => {
         if (!canvasContext) return;

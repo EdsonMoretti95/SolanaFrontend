@@ -13,7 +13,6 @@ const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: ''
 export default function PlayerList() {
     const wheelRef = useRef<any>(null);
     const [users, setUsers] = useState<UserList[]>([]);
-    const [winner, setWinner] = useState<UserList>()
     const [segments, setSegments] = useState<segmentObject[]>(emptySegments)
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
@@ -57,11 +56,10 @@ export default function PlayerList() {
             toast('Transaction Confirmed!');
         });
 
-        socket.on('winner', (winner) => {
-            setWinner(winner);
-            if (wheelRef.current) {            
-                wheelRef.current.spin();
-            }
+        socket.on('winner', (win: string) => {
+            if (wheelRef.current) {
+                wheelRef.current.spin(win);
+            }            
         })
     
         return () => {
@@ -78,8 +76,8 @@ export default function PlayerList() {
         return () => {
             socket.off('toast');
         };
-    }, []);    
-       
+    }, []);   
+          
     const joinGame = () => {        
         console.log("click join");
         joinTransfer().then( () => {
@@ -143,13 +141,12 @@ export default function PlayerList() {
                 ref={wheelRef}
                 segments={segments}
                 segColors={segColors}
-                winningSegment={winner?.id ?? ''}
                 onFinished={(winner) => onFinished(winner)}
                 primaryColor="black"
                 primaryColoraround="#f797ee"
                 contrastColor="black"
                 upDuration={200}
-                downDuration={5000}
+                downDuration={2000}
             />
             </div>        
         </div>
