@@ -37,7 +37,7 @@ export default function PlayerList() {
         '#0486d2',
       ]
       const onFinished = (winner: any) => {
-        console.log('winning ' + winner);
+        toast(`The winner is ${winner}`);
       }
 
     useEffect(() => {
