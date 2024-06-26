@@ -1,7 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+
+export interface segmentObject{
+    text: string;
+    status: number;
+}
 
 export interface WheelComponentProps {
-  segments: string[];
+  segments: segmentObject[];
   segColors: string[];
   winningSegment: string;
   onFinished: (segment: string) => void;
@@ -16,7 +21,7 @@ export interface WheelComponentProps {
   height?: number;
 }
 
-const WheelComponent: React.FC<WheelComponentProps> = ({
+const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
   segments,
   segColors,
   winningSegment,
@@ -30,7 +35,8 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   fontFamily = "proxima-nova",
   width = 100,
   height = 100
-}) => {
+}, ref) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   let currentSegment: string = "";
   let isStarted: boolean = false;
   let timerHandle: number | NodeJS.Timeout = 0;
@@ -47,33 +53,19 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   const centerY: number = 300;
 
   useEffect(() => {
-    wheelInit();
-    setTimeout(() => {
-      window.scrollTo(0, 1);
-    }, 0);
-  }, []);
-
-  useEffect(() => {
-    console.log(segments);
+    canvasContext = canvasRef.current?.getContext("2d") || null;
+    initCanvas();
     wheelDraw();
   }, [segments]);
 
-  const wheelInit = (): void => {
-    initCanvas();
-    wheelDraw();
-  };
+  useImperativeHandle(ref, () => ({
+    spin
+  }));
 
   const initCanvas = (): void => {
-    let canvas = document.getElementById("canvas") as HTMLCanvasElement;
-    if (navigator.appVersion.indexOf("MSIE") !== -1 && canvas) {
-      canvas = document.createElement("canvas");
-      canvas.setAttribute("width", width.toString());
-      canvas.setAttribute("height", height.toString());
-      canvas.setAttribute("id", "canvas");
-      document.getElementById("wheel")?.appendChild(canvas);
-    }
+    const canvas = canvasRef.current;
     if (canvas) {
-      canvas.addEventListener("click", spin, false);
+      canvas.style.backgroundImage = './public/topbg.png';
       canvasContext = canvas.getContext("2d");
     }
   };
@@ -137,7 +129,6 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   };
 
   const drawSegment = (key: number, lastAngle: number, angle: number): void => {
-    console.log('segment ' + segments[key] );
     if (!canvasContext) return;
     const ctx = canvasContext;
     const value = segments[key];
@@ -153,9 +144,9 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     ctx.save();
     ctx.translate(centerX, centerY);
     ctx.rotate((lastAngle + angle) / 2);
-    ctx.fillStyle = contrastColor || "white";
+    ctx.fillStyle = value.status == 0 ? 'black' : 'black'; // contrastColor || "white";
     ctx.font = "bold 1em " + fontFamily;
-    ctx.fillText(value.substr(0, 21), size / 2 + 20, 0);
+    ctx.fillText(`${value.text.substr(0, 5)} ${value.text != '' ? value.status.toString() : ''}`, size / 2 + 20, 0);
     ctx.restore();
   };
 
@@ -171,9 +162,9 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     ctx.textAlign = "center";
     ctx.font = "1em " + fontFamily;
     for (let i = 1; i <= len; i++) {
-        const angle = PI2 * (i / len) + angleCurrent;
-        drawSegment(i - 1, lastAngle, angle);
-        lastAngle = angle;
+      const angle = PI2 * (i / len) + angleCurrent;
+      drawSegment(i - 1, lastAngle, angle);
+      lastAngle = angle;
     }
 
     // Draw a center circle
@@ -218,7 +209,7 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
     ctx.textBaseline = "middle";
     ctx.fillStyle = "transparent";
     ctx.font = "bold 1.5em " + fontFamily;
-    currentSegment = segments[i];
+    currentSegment = segments[i].text;
     if (isStarted) {
       ctx.fillText(currentSegment, centerX + 10, centerY + size + 50);
     }
@@ -227,18 +218,31 @@ const WheelComponent: React.FC<WheelComponentProps> = ({
   const clear = (): void => {
     if (!canvasContext) return;
     const ctx = canvasContext;
-    ctx.clearRect(0, 0, 1000, 800);
+    ctx.clearRect(0, 0, 600, 600);
   };
+
+  const closeModal = () => {
+
+  }
 
   return (
     <div id="wheel">
-      <canvas
-        id="canvas"
-        width="600"
-        height="600"
-      />
+        <canvas
+            id="canvas"
+            width="600"
+            height="600"
+            ref={canvasRef}
+        />
+
+        <div id="winnerModal" className="modal" style={{'display': 'none'}}>
+            <div className="modal-content">
+                <h1 id="winnerMessage">YOU ARE A WINNER!</h1>
+                <div id="confetti"></div>
+                <button id="closeModalButton" onClick={closeModal}>Close</button>
+            </div>
+        </div>      
     </div>
   );
-};
+});
 
 export default WheelComponent;

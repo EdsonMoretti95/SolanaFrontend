@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import socket from '../socket';
 import { WalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { getOrCreateAssociatedTokenAccount, getAssociatedTokenAddressSync, createTransferInstruction, } from "@solana/spl-token";
@@ -6,12 +6,15 @@ import {  PublicKey, ParsedAccountData, LAMPORTS_PER_SOL, Transaction, } from "@
 import { UserList, payTransaction } from '@/types/types';
 import { toast } from 'react-toastify';
 import { WalletSignTransactionError } from '@solana/wallet-adapter-base';
-import WheelComponent from './WheelComponent';
+import WheelComponent, { segmentObject } from './WheelComponent2';
+
+const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: '', status: 1 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }];
 
 export default function PlayerList() {
+    const wheelRef = useRef<any>(null);
     const [users, setUsers] = useState<UserList[]>([]);
     const [winner, setWinner] = useState<UserList>()
-    const [segments, setSegments] = useState<string[]>(['BrT1', 'BrT2', 'BrT3', 'BrT4', 'BrT5', 'BrT6', 'BrT7', 'BrT8', 'BrT9', 'BrT10', 'BrT11', 'BrT12'])
+    const [segments, setSegments] = useState<segmentObject[]>(emptySegments)
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
 
@@ -34,13 +37,13 @@ export default function PlayerList() {
         '#0486d2',
       ]
       const onFinished = (winner: any) => {
-        console.log(winner);
-      }    
+        console.log('winning ' + winner);
+      }
 
     useEffect(() => {
         socket.on('updateUsers', (users: UserList[]) => {            
             setUsers(users);
-            setSegments( segments.map((s, index) => users[index] ? users[index].id : s) );
+            setSegments( segments.map((s, index) => users[index] ? {text: users[index].id, status: users[index].status } : emptySegments[index]) );
             console.log(segments);
         });
     
@@ -53,15 +56,23 @@ export default function PlayerList() {
         socket.on('paymentReceived', (users) => {
             toast('Transaction Confirmed!');
         });
+
+        socket.on('winner', (winner) => {
+            setWinner(winner);
+            if (wheelRef.current) {            
+                wheelRef.current.spin();
+            }
+        })
     
         return () => {
             socket.off('paymentReceived');
+            socket.off('winner');
         };
     }, []);  
 
     useEffect(() => {
-        socket.on('toast', (winner) => {
-            toast(`${winner}`);
+        socket.on('toast', (toast) => {
+            toast(`${toast}`);
         });
     
         return () => {
@@ -114,15 +125,36 @@ export default function PlayerList() {
                 sendTransactionId({ id: publicKey ? publicKey?.toString() : '', transaction: result.serialize() });
                 toast("Transaction Sent!");
             });                
-          }
-          // send this to backend and execute it there
-
-          //const signature = await connection.sendRawTransaction(signedTransaction.serialize()); // Send the signed transaction
-          //connection.confirmTransaction(signature, 'confirmed');          
+          }    
         }catch (error) {
             console.log(error);
         }
       }    
+
+      const addPlayer = () => {
+        var segs = segments.slice();
+        for (let i = 0; i < segs.length; i++) {
+            const element = segs[i];
+
+            if(element.text == 'Empty'){
+                segs[i].text = i.toString();
+                setSegments(segs);
+                console.log(segments);
+                return;
+            }            
+        }
+      }
+
+      const handleSpinClick = () => {
+        console.log('ref', wheelRef);        
+        if (wheelRef.current) {            
+            wheelRef.current.spin();
+        }
+      };   
+      
+      const handleFinished = (segment: string) => {
+        console.log(`Finished! The winning segment is ${segment}`);
+      };      
 
     return(        
         <div style={{"height" : "100%", "width" : "100%"}}>
@@ -144,16 +176,23 @@ export default function PlayerList() {
                     </ul>                     
                 </div>
             ) : 'Not Connected')}
+    <button onClick={addPlayer}>Add</button>
+    <button onClick={handleSpinClick}>Spin the wheel</button>
+    <div id="wheelCircle">
       <WheelComponent
+        ref={wheelRef}
         segments={segments}
         segColors={segColors}
-        winningSegment={segments[5]}
+        winningSegment={segments[0].text}
         onFinished={(winner) => onFinished(winner)}
-        primaryColor='#fa6bfa'
-        contrastColor='black'
-        upDuration={300}
-        downDuration={400}
-      />        
+        primaryColor="black"
+        primaryColoraround="#f797ee"
+        contrastColor="black"
+        size={250}
+        upDuration={200}
+        downDuration={5000}
+      />
+    </div>        
         </div>
         
     );

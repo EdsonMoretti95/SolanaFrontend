@@ -82,6 +82,11 @@ const WheelComponent = ({
   };
 
   const spin = () => {
+    console.log('angle current ' + angleCurrent);
+    console.log('angle delta ' + angleDelta);
+    console.log('timer handle ' + timerHandle);
+    console.log('frames ' + frames);
+
     isStarted = true;
     if (timerHandle === 0) {
       spinStart = new Date().getTime();
@@ -240,7 +245,7 @@ const WheelComponent = ({
 
   return (
     <div ref={wheelRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <canvas ref={canvasRef} />
+      <canvas ref={canvasRef}/>
     </div>
   );
 };
