@@ -71,8 +71,8 @@ export default function PlayerList() {
     }, []);  
 
     useEffect(() => {
-        socket.on('toast', (toast) => {
-            toast(toast);
+        socket.on('toast', (msg) => {
+            toast(msg);
         });
     
         return () => {
