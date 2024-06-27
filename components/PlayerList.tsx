@@ -7,6 +7,33 @@ import { UserList, payTransaction } from '@/types/types';
 import { toast } from 'react-toastify';
 import { WalletSignTransactionError } from '@solana/wallet-adapter-base';
 import WheelComponent, { segmentObject } from './WheelComponent2';
+import dynamic from 'next/dynamic';
+import Popup from './Popup';
+
+const gameInstructions = `Welcome to the $Horny game! \n\t
+
+To play the game you need to connect a wallet that has your $Horny tokens and some SOL for gas.
+Connecting your wallet won't give the app full control, it will only be able to see your public key and ask you to sign transactions. 
+If you have safety concerns please create a temporary wallet, transfer $Horny tokens and cents in SOL for gas.
+After connecting you can click join, the game will ask you to sign a transaction for 50 Horny tokens. 
+Your wallet will show warnings because our token is not whitelisted yet, simply bypass the warnings and proceed.
+Once you sign the transaction you will be added to the wheel.
+You should see the first 5 digits of your public address followed by a number 0 which is the status of the transaction, it will change to 1 once your transaction gets confirmed.
+If the transaction is not confirmed within 2 minutes you will be automatically removed from the wheel.
+If you status already changed to 1 (confirmed), you just need to wait until all the players join. 
+We are currently testing with 4 players so we need 4 for a game to start.
+The wheel should start to spin automatically if you are connected at the time of the winner selection.
+If you are not connected you will miss the animation but you will be considered for the game anyway and if you win you will get the prize.
+The winner gets the horny tokens from all the players that joined, you can check the transactions from the game wallet on solscan.
+When the game ends, all the players will be removed from the wheel and you will be able to re-join.
+Game Wallet: 5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn
+If you have any questions, ask on telegram chat. Have fun!`;
+
+const WalletMultiButtonDynamic = dynamic(
+  async () =>
+    (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+);
 
 const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: '', status: 1 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }, {text: '', status: 0 }];
 
@@ -16,6 +43,11 @@ export default function PlayerList() {
     const [segments, setSegments] = useState<segmentObject[]>(emptySegments)
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
+
+    const [isPopupVisible, setPopupVisible] = useState(false);
+
+    const showPopup = () => setPopupVisible(true);
+    const closePopup = () => setPopupVisible(false);    
 
     const DESTINATION_WALLET = '5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn'; 
     const MINT_ADDRESS = '2hnFpwft7BRhh7fcbkqaLzXubn76jNJNSyTZwdtDpump'; 
@@ -131,23 +163,27 @@ export default function PlayerList() {
 
     return(        
         <div style={{"height" : "100%", "width" : "100%"}}>
-            {(publicKey ? (
-                <div>
-                    <button onClick={joinGame} className='join-game-button'>Join Game</button>
-                </div>
-            ) : 'Not Connected')}            
-            <div id="wheelCircle">
-            <WheelComponent
-                ref={wheelRef}
-                segments={segments}
-                segColors={segColors}
-                onFinished={(winner) => onFinished(winner)}
-                primaryColor="black"
-                primaryColoraround="#f797ee"
-                contrastColor="black"
-                upDuration={200}
-                downDuration={2000}
-            />
+
+            <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'flex-start'}}>
+                <WalletMultiButtonDynamic />
+                <button className='button' onClick={showPopup}>Instructions</button>                
+                <button onClick={joinGame} disabled={publicKey != null ? false : true} className='button'>Join Game</button>  
+                {isPopupVisible && (
+                  <Popup message={gameInstructions} onClose={closePopup} />
+        )}                              
+            </div>
+            <div id="wheelComponent" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '93vh', width: '100vw' }}>
+                <WheelComponent
+                    ref={wheelRef}
+                    segments={segments}
+                    segColors={segColors}
+                    onFinished={(winner) => onFinished(winner)}
+                    primaryColor="black"
+                    primaryColoraround="#f797ee"
+                    contrastColor="black"
+                    upDuration={200}
+                    downDuration={2000}
+                />
             </div>        
         </div>
         

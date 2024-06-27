@@ -1,15 +1,11 @@
-body {
-  background-color: lightgray;
-}
-
 button.wallet-adapter-button-trigger {
   cursor: pointer;
   color: white !important;
   border: none !important;
   border-radius: 5% !important;
   background-color: #ab9ff2 !important;
-  padding: 10px 20px;
-  font-size: 18px;
+  padding: 15px 15px;
+  font-size: 15px;
 }
 
 button.wallet-adapter-button-trigger:hover {
@@ -17,12 +13,50 @@ button.wallet-adapter-button-trigger:hover {
   color: #ab9ff2 !important;
 }
 
-button.join-game-button {
+button.button {
   cursor: pointer;
   color: white !important;
   border: none !important;
   border-radius: 5% !important;
   background-color: #ab9ff2 !important;
-  padding: 10px 20px;
-  font-size: 18px;
+  padding: 15px 10px;
+  font-size: 15px;
+}
+
+button.button:disabled{
+  background-color: gray !important;
+}
+
+button.button:disabled:hover{
+  background-color: gray !important;
+  color: white !important;
+}
+
+button.button:hover {
+  background-color: white !important;
+  color: #ab9ff2 !important;
+}
+
+.popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.popup {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.popup button {
+  margin-top: 20px;
 }

@@ -236,12 +236,13 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     WheelComponent.displayName = 'WheelComponent';
 
     return (
-        <div id="wheel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '80vh' }}>
+        <div id="wheel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
             <canvas
                 id="canvas"
                 ref={canvasRef}
                 width={canvasSize}
                 height={canvasSize}
+                style={{padding: '40px', boxSizing: 'border-box'}}
             />
         </div>
     );
