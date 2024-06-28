@@ -75,7 +75,7 @@ export default function PlayerList() {
         socket.on('updateUsers', (users: UserList[]) => {            
             setUsers(users);
             setSegments( segments.map((s, index) => users[index] ? {text: users[index].id, status: users[index].status } : emptySegments[index]) );
-            console.log(segments);
+            console.log('update users');
         });
     
         return () => {
@@ -110,8 +110,12 @@ export default function PlayerList() {
         };
     }, []);   
           
-    const joinGame = () => {        
-        console.log("click join");
+    const joinGame = () => {   
+        if(users.some(u => u.id === publicKey?.toString())){
+          toast('You are already in the game');
+          return;
+        }
+      
         joinTransfer().then( () => {
             socket.emit('join', publicKey);
         });
@@ -150,10 +154,11 @@ export default function PlayerList() {
       
           if(signTransaction){
             signTransaction(tx).then(async (result) => {
-                console.log('went here');
                 await new Promise(r => setTimeout(r, 2000));
                 sendTransactionId({ id: publicKey ? publicKey?.toString() : '', transaction: result.serialize() });
                 toast("Transaction Sent!");
+            }).catch(() => {
+              socket.emit('remove', publicKey!.toString());
             });                
           }    
         }catch (error) {
@@ -181,8 +186,8 @@ export default function PlayerList() {
                     primaryColor="black"
                     primaryColoraround="#f797ee"
                     contrastColor="black"
-                    upDuration={200}
-                    downDuration={2000}
+                    upDuration={1000}
+                    downDuration={10000}
                 />
             </div>        
         </div>

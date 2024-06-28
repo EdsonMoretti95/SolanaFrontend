@@ -60,7 +60,7 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     useEffect(() => {
         canvasContext = canvasRef.current?.getContext("2d") || null;
         initCanvas();
-        wheelDraw();
+        if(canvasSize > 0) wheelDraw();
     }, [segments, canvasSize]);
 
     useImperativeHandle(ref, () => ({
@@ -76,7 +76,6 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
 
     const spin = (winner: string): void => {
         winningSegment.current = winner;
-        console.log('winner ' + winningSegment.current);
         isStarted = true;
         if (timerHandle === 0) {
             spinStart = new Date().getTime();
@@ -139,12 +138,12 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
         if (!canvasContext) return;
         const ctx = canvasContext;
         const value = segments[key];
-        const centerX = canvasSize / 2;
-        const centerY = canvasSize / 2;
+        const centerX = (canvasSize - 10) / 2;
+        const centerY = (canvasSize - 10) / 2;
         ctx.save();
         ctx.beginPath();
         ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX, centerY, canvasSize / 2, lastAngle, angle, false);
+        ctx.arc(centerX + 5, centerY + 5, (canvasSize - 10) / 2, lastAngle, angle, false);
         ctx.lineTo(centerX, centerY);
         ctx.closePath();
         ctx.fillStyle = segColors[key];
@@ -162,8 +161,8 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     const drawWheel = (): void => {
         if (!canvasContext) return;
         const ctx = canvasContext;
-        const centerX = canvasSize / 2;
-        const centerY = canvasSize / 2;
+        const centerX = (canvasSize - 10) / 2;
+        const centerY = (canvasSize - 10) / 2;
         let lastAngle = angleCurrent;
         const len = segments.length;
         const PI2 = Math.PI * 2;
@@ -191,13 +190,13 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
         ctx.textAlign = "center";
         ctx.stroke();
 
-        // Draw outer circle
-        // ctx.beginPath();
-        // ctx.arc(centerX, centerY, ((canvasSize - 25) / 2), 0, PI2, false); // Adjusted size for padding
-        // ctx.closePath();
-        // ctx.lineWidth = 25;
-        // ctx.strokeStyle = primaryColoraround || 'white';
-        // ctx.stroke();
+        //Draw outer circle
+        ctx.beginPath();
+        ctx.arc(centerX + 5, centerY + 5, ((canvasSize - 10) / 2), 0, PI2, false); // Adjusted size for padding
+        ctx.closePath();
+        ctx.lineWidth = 10;
+        ctx.strokeStyle = primaryColoraround || 'white';
+        ctx.stroke();
     };
 
     const drawNeedle = (): void => {
