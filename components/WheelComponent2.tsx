@@ -1,53 +1,35 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from "react";
+import React, { useEffect, useState, useImperativeHandle, forwardRef } from "react";
 
-export interface segmentObject {
+const primaryColor = 'black';
+const fontFamily = 'proxima-nova';
+const segColors = ['#ffffff', '#c800a5', '#ffffff', '#0486d2', '#ffffff', '#c800a5', '#ffffff', '#0486d2', '#ffffff', '#c800a5', '#ffffff', '#0486d2'];
+const numSegments = 12;
+
+export interface SegmentObject {
     text: string;
     status: number;
 }
 
 export interface WheelComponentProps {
-    segments: segmentObject[];
-    segColors: string[];
-    onFinished: (segment: string) => void;
-    primaryColor?: string;
-    primaryColoraround?: string;
-    contrastColor?: string;
-    upDuration?: number;
-    downDuration?: number;
-    fontFamily?: string;
+    segments: SegmentObject[];
+    onFinished?: (segment: string) => void;
 }
 
-const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
-    segments,
-    segColors,
-    onFinished,
-    primaryColor,
-    primaryColoraround,
-    contrastColor,
-    upDuration = 1000,
-    downDuration = 100,
-    fontFamily = "proxima-nova"
-}, ref) => {
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const winningSegment = useRef<string>('a');;
+const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps, ref) => {
     const [canvasSize, setCanvasSize] = useState(0);
-    let currentSegment: string = "";
-    let isStarted: boolean = false;
-    let timerHandle: number | NodeJS.Timeout = 0;
-    const timerDelay: number = segments.length;
-    let angleCurrent: number = 0;
-    let angleDelta: number = 0;
-    let canvasContext: CanvasRenderingContext2D | null = null;
-    let maxSpeed: number = Math.PI / segments.length;
-    const upTime: number = segments.length * upDuration;
-    const downTime: number = segments.length * downDuration;
-    let spinStart: number = 0;
-    let frames: number = 0;    
+    const [angleCurrent, setAngleCurrent] = useState(0);
+    const [isSpinning, setIsSpinning] = useState(false);
+    const [timerHandle, setTimerHandle] = useState<number | null>(null);
+
+    let duration = 5000; // total spin duration
+    let accelerationDuration = 5000; // acceleration phase duration
+    let start: number | null = null;
+    let frames: number = 0;
+    let winningSegment: number = 0; // Set the winning segment index here
 
     useEffect(() => {
         const handleResize = () => {
-            const padding = 0; // Adjust padding as needed
-            const size = Math.min(window.innerWidth, window.innerHeight) * 0.9 - padding;
+            const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
             setCanvasSize(size);
         };
 
@@ -58,191 +40,138 @@ const WheelComponent = forwardRef<unknown, WheelComponentProps>(({
     }, []);
 
     useEffect(() => {
-        canvasContext = canvasRef.current?.getContext("2d") || null;
-        initCanvas();
-        if(canvasSize > 0) wheelDraw();
-    }, [segments, canvasSize]);
+        if(!isSpinning && angleCurrent !== 0) setAngleCurrent(0);
+    }, [segments])
 
-    useImperativeHandle(ref, () => ({
-        spin
-    }));
+    const easeInCubic = (t: number): number => {
+        return t * t * t;
+    };
 
-    const initCanvas = (): void => {
-        const canvas = canvasRef.current;
-        if (canvas) {
-            canvasContext = canvas.getContext("2d");
-        }
+    const easeOutCubic = (t: number): number => {
+        return 1 - Math.pow(1 - t, 3);
     };
 
     const spin = (winner: string): void => {
-        winningSegment.current = winner;
-        isStarted = true;
-        if (timerHandle === 0) {
-            spinStart = new Date().getTime();
-            maxSpeed = Math.PI / segments.length;
+        winningSegment = segments.findIndex(s => s.text === winner);
+        setIsSpinning(true);
+        if (!timerHandle) {
+            start = null;
             frames = 0;
-            timerHandle = setInterval(onTimerTick, timerDelay);
+            const handle = window.requestAnimationFrame(onTimerTick);
+            setTimerHandle(handle);
         }
     };
 
-    const onTimerTick = (): void => {
-        frames++;
-        wheelDraw();
-        const duration = new Date().getTime() - spinStart;
-        let progress = 0;
-        let finished = false;
-        if (duration < upTime) {
-          progress = duration / upTime;
-          angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2);
+    useImperativeHandle(ref, () => ({
+        spin,
+    }));
+
+    const onTimerTick = (timestamp: number): void => {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const totalDuration = duration + accelerationDuration;
+        const progress = Math.min(elapsed / totalDuration, 1);
+        let easedProgress;
+
+        if (elapsed < accelerationDuration) {
+            // Acceleration phase
+            easedProgress = easeInCubic(elapsed / accelerationDuration);
         } else {
-          if (winningSegment) {
-            if (currentSegment === winningSegment.current && frames > segments.length) {
-              progress = duration / upTime;
-              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-              progress = 1;
-            } else {
-              progress = duration / downTime;
-              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
+            // Deceleration phase
+            easedProgress = easeOutCubic((elapsed - accelerationDuration) / duration);
+        }
+
+        const anglePerSegment = (2 * Math.PI) / numSegments;
+        const targetAngle = (3 * Math.PI / 2) - (winningSegment * anglePerSegment + anglePerSegment / 2);
+        const totalRotations = 5; // Total rotations before stopping
+        const finalAngle = targetAngle + totalRotations * (2 * Math.PI);
+
+        setAngleCurrent(finalAngle * easedProgress);
+
+        if (progress < 1) {
+            const handle = window.requestAnimationFrame(onTimerTick);
+            setTimerHandle(handle);
+        } else {
+            if(onFinished){
+                onFinished(segments[winningSegment].text);            
             }
-          } else {
-            progress = duration / downTime;
-            if (progress >= 0.8) {
-              angleDelta = (maxSpeed / 1.2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-            } else if (progress >= 0.98) {
-              angleDelta = (maxSpeed / 2) * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-            } else {
-              angleDelta = maxSpeed * Math.sin((progress * Math.PI) / 2 + Math.PI / 2);
-            }
-          }
-          if (progress >= 1) finished = true;
+            
+            setIsSpinning(false);
+            setTimerHandle(null);
         }
-    
-        angleCurrent += angleDelta;
-        while (angleCurrent >= Math.PI * 2) angleCurrent -= Math.PI * 2;
-        if (finished) {
-          onFinished(currentSegment);
-          clearInterval(timerHandle as number);
-          timerHandle = 0;
-          angleDelta = 0;
-        }
-      };
-
-    const wheelDraw = (): void => {
-        if (!canvasContext) return;
-        clear();
-        drawWheel();
-        drawNeedle();
     };
 
-    const drawSegment = (key: number, lastAngle: number, angle: number): void => {
-        if (!canvasContext) return;
-        const ctx = canvasContext;
-        const value = segments[key];
-        const centerX = (canvasSize - 10) / 2;
-        const centerY = (canvasSize - 10) / 2;
-        ctx.save();
-        ctx.beginPath();
-        ctx.moveTo(centerX, centerY);
-        ctx.arc(centerX + 5, centerY + 5, (canvasSize - 10) / 2, lastAngle, angle, false);
-        ctx.lineTo(centerX, centerY);
-        ctx.closePath();
-        ctx.fillStyle = segColors[key];
-        ctx.fill();
-        ctx.stroke();
-        ctx.save();
-        ctx.translate(centerX, centerY);
-        ctx.rotate((lastAngle + angle) / 2);
-        ctx.fillStyle = value.status === 0 ? 'black' : 'black';
-        ctx.font = "bold 1em " + fontFamily;
-        ctx.fillText(`${value.text.substr(0, 5)} ${value.text !== '' ? value.status.toString() : ''}`, canvasSize / 2 / 2 + 20, 0);
-        ctx.restore();
-    };
-
-    const drawWheel = (): void => {
-        if (!canvasContext) return;
-        const ctx = canvasContext;
-        const centerX = (canvasSize - 10) / 2;
-        const centerY = (canvasSize - 10) / 2;
-        let lastAngle = angleCurrent;
-        const len = segments.length;
-        const PI2 = Math.PI * 2;
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = primaryColor || "black";
-        ctx.textBaseline = "middle";
-        ctx.textAlign = "center";
-        ctx.font = "1em " + fontFamily;
-        for (let i = 1; i <= len; i++) {
-            const angle = PI2 * (i / len) + angleCurrent;
-            drawSegment(i - 1, lastAngle, angle);
-            lastAngle = angle;
-        }
-
-        // Draw a center circle
-        ctx.beginPath();
-        ctx.arc(centerX, centerY, 20, 0, PI2, false);
-        ctx.closePath();
-        ctx.fillStyle = primaryColoraround || 'white';
-        ctx.lineWidth = 5;
-        ctx.strokeStyle = "white";
-        ctx.fill();
-        ctx.font = "bold 2em " + fontFamily;
-        ctx.fillStyle = "white";
-        ctx.textAlign = "center";
-        ctx.stroke();
-
-        //Draw outer circle
-        ctx.beginPath();
-        ctx.arc(centerX + 5, centerY + 5, ((canvasSize - 10) / 2), 0, PI2, false); // Adjusted size for padding
-        ctx.closePath();
-        ctx.lineWidth = 10;
-        ctx.strokeStyle = primaryColoraround || 'white';
-        ctx.stroke();
-    };
-
-    const drawNeedle = (): void => {
-        if (!canvasContext) return;
-        const ctx = canvasContext;
+    const renderSegments = () => {
+        const radius = canvasSize / 2 * 0.95;
         const centerX = canvasSize / 2;
         const centerY = canvasSize / 2;
-        ctx.lineWidth = 1;
-        ctx.strokeStyle = contrastColor || "white";
-        ctx.fillStyle = contrastColor || "white";
-        ctx.beginPath();
-        ctx.moveTo(centerX - (canvasSize / 30), centerY - canvasSize / 2 - 15);
-        ctx.lineTo(centerX + (canvasSize / 30), centerY - canvasSize / 2 - 15);
-        ctx.lineTo(centerX, centerY - canvasSize / 2 + (canvasSize / 8));
-        ctx.closePath();
-        ctx.fill();
-        const change = angleCurrent + Math.PI / 2;
-        let i = segments.length - Math.floor((change / (Math.PI * 2)) * segments.length) - 1;
-        if (i < 0) i = i + segments.length;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "transparent";
-        ctx.font = "bold 1.5em " + fontFamily;
-        currentSegment = segments[i].text;
-        if (isStarted) {
-            ctx.fillText(currentSegment, centerX + 10, centerY + canvasSize / 2 + 50);
-        }
-    };
+        const anglePerSegment = (2 * Math.PI) / numSegments;
 
-    const clear = (): void => {
-        if (!canvasContext) return;
-        const ctx = canvasContext;
-        ctx.clearRect(0, 0, canvasSize, canvasSize);
-    };
+        return segments.map((segment, index) => {
+            const startAngle = anglePerSegment * index + angleCurrent;
+            const endAngle = startAngle + anglePerSegment;
+            const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
+            const x1 = centerX + radius * Math.cos(startAngle);
+            const y1 = centerY + radius * Math.sin(startAngle);
+            const x2 = centerX + radius * Math.cos(endAngle);
+            const y2 = centerY + radius * Math.sin(endAngle);
+            const textAngle = startAngle + anglePerSegment / 2;
+            const textX = centerX + (radius / 1.5) * Math.cos(textAngle);
+            const textY = centerY + (radius / 1.5) * Math.sin(textAngle);
+            const needleSize = canvasSize / 10;
 
-    WheelComponent.displayName = 'WheelComponent';
+            return (
+                <g key={index}>
+                    <path
+                        d={`M${centerX},${centerY} L${x1},${y1} A${radius},${radius} 0 ${largeArcFlag},1 ${x2},${y2} Z`}
+                        fill={segColors[index]}
+                    />
+                    <path d={`M${centerX - 15},${0} L${centerX},${needleSize} L${centerX + 15},${0} Z`} stroke={'black'}/>
+                    <text
+                        x={textX}
+                        y={textY}
+                        fill="black"
+                        fontFamily={fontFamily}
+                        fontSize="18"
+                        fontWeight="bold"
+                        textAnchor="middle"
+                        alignmentBaseline="middle"
+                        transform={`rotate(${(textAngle * 180) / Math.PI},${textX},${textY})`}
+                    >
+                        {segment.text.substr(0, 5)} {segment.text !== '' ? segment.status : ''}
+                    </text>
+                </g>
+            );
+        });
+    };
 
     return (
-        <div id="wheel" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
-            <canvas
-                id="canvas"
-                ref={canvasRef}
+        <div id="wheel" style={{marginTop: '3Vh',  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>            
+            <svg
+                id="svg"
                 width={canvasSize}
                 height={canvasSize}
-                style={{padding: '40px', boxSizing: 'border-box'}}
-            />
+                viewBox={`0 0 ${canvasSize+10} ${canvasSize+10}`}
+            >
+                <circle
+                    cx={canvasSize / 2}
+                    cy={canvasSize / 2}
+                    r={canvasSize / 2 * 0.99}
+                    fill="#f797ee"
+                    stroke="#f797ee"
+                    strokeWidth="2"
+                />                
+                <path d={`M${canvasSize/2},0 L`}/>
+                {renderSegments()}
+                <circle
+                    cx={canvasSize / 2}
+                    cy={canvasSize / 2}
+                    r={canvasSize * 0.04}
+                    fill="#f797ee"
+                    stroke="white"
+                    strokeWidth="5"
+                />
+            </svg>
         </div>
     );
 });

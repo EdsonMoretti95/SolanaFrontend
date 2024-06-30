@@ -6,7 +6,7 @@ import {  PublicKey, ParsedAccountData, LAMPORTS_PER_SOL, Transaction, } from "@
 import { UserList, payTransaction } from '@/types/types';
 import { toast } from 'react-toastify';
 import { WalletSignTransactionError } from '@solana/wallet-adapter-base';
-import WheelComponent, { segmentObject } from './WheelComponent2';
+import WheelComponent, { SegmentObject } from './WheelComponent2';
 import dynamic from 'next/dynamic';
 import Popup from './Popup';
 
@@ -40,7 +40,7 @@ const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: ''
 export default function PlayerList() {
     const wheelRef = useRef<any>(null);
     const [users, setUsers] = useState<UserList[]>([]);
-    const [segments, setSegments] = useState<segmentObject[]>(emptySegments)
+    const [segments, setSegments] = useState<SegmentObject[]>(emptySegments)
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
 
@@ -51,25 +51,7 @@ export default function PlayerList() {
 
     const DESTINATION_WALLET = '5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn'; 
     const MINT_ADDRESS = '2hnFpwft7BRhh7fcbkqaLzXubn76jNJNSyTZwdtDpump'; 
-    const TRANSFER_AMOUNT = 50;  
-    
-      const segColors = [
-        '#ffffff', 
-        '#c800a5', 
-        '#ffffff', 
-        '#0486d2',
-        '#ffffff', 
-        '#c800a5', 
-        '#ffffff', 
-        '#0486d2', 
-        '#ffffff',  
-        '#c800a5',
-        '#ffffff',
-        '#0486d2',
-      ]
-      const onFinished = (winner: any) => {
-        toast(`The winner is ${winner}`);
-      }
+    const TRANSFER_AMOUNT = 50;        
 
     useEffect(() => {
         socket.on('updateUsers', (users: UserList[]) => {            
@@ -164,31 +146,24 @@ export default function PlayerList() {
         }catch (error) {
             console.log(error);
         }
-      }    
+      }
 
+      const onFinished = (winner: string) => {
+        toast('The winner is: ' + winner);
+      }
+    
     return(        
         <div style={{"height" : "100%", "width" : "100%"}}>
-
             <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'flex-start'}}>
                 <WalletMultiButtonDynamic />
                 <button className='button' onClick={showPopup}>Instructions</button>                
-                <button onClick={joinGame} disabled={publicKey != null ? false : true} className='button'>Join Game</button>  
+                <button onClick={joinGame} disabled={publicKey != null ? false : true} className='button'>Join Game</button>
                 {isPopupVisible && (
                   <Popup message={gameInstructions} onClose={closePopup} />
         )}                              
             </div>
             <div id="wheelComponent" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '93vh', width: '100vw' }}>
-                <WheelComponent
-                    ref={wheelRef}
-                    segments={segments}
-                    segColors={segColors}
-                    onFinished={(winner) => onFinished(winner)}
-                    primaryColor="black"
-                    primaryColoraround="#f797ee"
-                    contrastColor="black"
-                    upDuration={1000}
-                    downDuration={10000}
-                />
+                <WheelComponent ref={wheelRef} segments={segments} onFinished={onFinished}/>
             </div>        
         </div>
         
