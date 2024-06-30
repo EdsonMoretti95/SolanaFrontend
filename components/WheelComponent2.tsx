@@ -27,6 +27,8 @@ const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps,
     let frames: number = 0;
     let winningSegment: number = 0; // Set the winning segment index here
 
+    WheelComponent.displayName = 'Wheel';
+
     useEffect(() => {
         const handleResize = () => {
             const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
