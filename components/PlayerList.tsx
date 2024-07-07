@@ -38,7 +38,6 @@ const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: ''
 
 export default function PlayerList() {
     const wheelRef = useRef<any>(null);
-    const [users, setUsers] = useState<UserList[]>([]);    
     const [segments, setSegments] = useState<SegmentObject[]>(emptySegments)
     const [gameStatus, setGameStatus] = useState<number>(-1); 
     const [transferAmount, settransferAmount] = useState<number>(50);    
@@ -57,8 +56,7 @@ export default function PlayerList() {
         socket.on('updateUsers', (gameState: GameState) => {            
             settransferAmount(gameState.entryValue);
             setGameStatus(gameState.status);
-            setUsers(gameState.users);
-            setSegments( segments.map((s, index) => users[index] ? {text: users[index].id, status: users[index].status } : emptySegments[index]) );
+            setSegments( segments.map((s, index) => gameState.users[index] ? {text: gameState.users[index].id, status: gameState.users[index].status } : emptySegments[index]) );
             console.log('update users');
         });
     
@@ -94,12 +92,7 @@ export default function PlayerList() {
         };
     }, []);   
           
-    const joinGame = () => {   
-        if(users.some(u => u.id === publicKey?.toString())){
-          toast('You are already in the game');
-          return;
-        }
-      
+    const joinGame = () => {        
         joinTransfer().then( () => {
             socket.emit('join', publicKey);
         });
