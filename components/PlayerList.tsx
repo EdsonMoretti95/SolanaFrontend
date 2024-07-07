@@ -3,7 +3,7 @@ import socket from '../socket';
 import { WalletProvider, useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { getOrCreateAssociatedTokenAccount, getAssociatedTokenAddressSync, createTransferInstruction, } from "@solana/spl-token";
 import {  PublicKey, ParsedAccountData, LAMPORTS_PER_SOL, Transaction, } from "@solana/web3.js";
-import { UserList, payTransaction } from '@/types/types';
+import { GameState, UserList, payTransaction } from '@/types/types';
 import { toast } from 'react-toastify';
 import { WalletSignTransactionError } from '@solana/wallet-adapter-base';
 import WheelComponent, { SegmentObject } from './WheelComponent2';
@@ -15,8 +15,7 @@ const gameInstructions = `Welcome to the $Horny game! \n\t
 To play the game you need to connect a wallet that has your $Horny tokens and some SOL for gas.
 Connecting your wallet won't give the app full control, it will only be able to see your public key and ask you to sign transactions. 
 If you have safety concerns please create a temporary wallet, transfer $Horny tokens and cents in SOL for gas.
-After connecting you can click join, the game will ask you to sign a transaction for 50 Horny tokens. 
-Your wallet will show warnings because our token is not whitelisted yet, simply bypass the warnings and proceed.
+After connecting you can click join, the game will ask you to sign a transaction for X amount of Horny tokens. 
 Once you sign the transaction you will be added to the wheel.
 You should see the first 5 digits of your public address followed by a number 0 which is the status of the transaction, it will change to 1 once your transaction gets confirmed.
 If the transaction is not confirmed within 2 minutes you will be automatically removed from the wheel.
@@ -39,23 +38,26 @@ const emptySegments = [{text: '', status: 1 }, {text: '', status: 1 }, {text: ''
 
 export default function PlayerList() {
     const wheelRef = useRef<any>(null);
-    const [users, setUsers] = useState<UserList[]>([]);
+    const [users, setUsers] = useState<UserList[]>([]);    
     const [segments, setSegments] = useState<SegmentObject[]>(emptySegments)
+    const [gameStatus, setGameStatus] = useState<number>(-1); 
+    const [transferAmount, settransferAmount] = useState<number>(50);    
     const { publicKey, signTransaction, sendTransaction } = useWallet();
     const { connection } = useConnection();
 
     const [isPopupVisible, setPopupVisible] = useState(false);
 
     const showPopup = () => setPopupVisible(true);
-    const closePopup = () => setPopupVisible(false);    
+    const closePopup = () => setPopupVisible(false);
 
     const DESTINATION_WALLET = '5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn'; 
     const MINT_ADDRESS = '2hnFpwft7BRhh7fcbkqaLzXubn76jNJNSyTZwdtDpump'; 
-    const TRANSFER_AMOUNT = 50;        
 
     useEffect(() => {
-        socket.on('updateUsers', (users: UserList[]) => {            
-            setUsers(users);
+        socket.on('updateUsers', (gameState: GameState) => {            
+            settransferAmount(gameState.entryValue);
+            setGameStatus(gameState.status);
+            setUsers(gameState.users);
             setSegments( segments.map((s, index) => users[index] ? {text: users[index].id, status: users[index].status } : emptySegments[index]) );
             console.log('update users');
         });
@@ -127,7 +129,7 @@ export default function PlayerList() {
             sourceAccount,
             destinationAccount,
             new PublicKey(publicKey!.toString()),
-            TRANSFER_AMOUNT * Math.pow(10, numberofDecimals)
+            transferAmount * Math.pow(10, numberofDecimals)
           ));
       
           const { blockhash } = await connection.getLatestBlockhash("confirmed");
@@ -157,11 +159,12 @@ export default function PlayerList() {
             <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'flex-start'}}>
                 <WalletMultiButtonDynamic />
                 <button className='button' onClick={showPopup}>Instructions</button>                
-                <button onClick={joinGame} disabled={publicKey != null ? false : true} className='button'>Join Game</button>
-                {isPopupVisible && (
-                  <Popup message={gameInstructions} onClose={closePopup} />
-        )}                              
+                <button onClick={joinGame} disabled={publicKey != null && gameStatus !== 0 ? false : true} className='button'>Join Game</button>
+                {isPopupVisible && (<Popup message={gameInstructions} onClose={closePopup} />)}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <label hidden={gameStatus === -1}>{gameStatus === 0 ? 'no game open' : `game open for ${transferAmount} $Horny`}</label>
+            </div>            
             <div id="wheelComponent" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '93vh', width: '100vw' }}>
                 <WheelComponent ref={wheelRef} segments={segments} onFinished={onFinished}/>
             </div>        

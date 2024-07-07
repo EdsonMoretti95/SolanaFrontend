@@ -9,3 +9,9 @@ export type payTransaction = {
     id: string,    
     transaction: Buffer,
 }
+
+export type GameState = {
+    status: number;
+    entryValue: number;
+    users: UserList[]
+}
