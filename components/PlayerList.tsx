@@ -19,12 +19,11 @@ After connecting you can click join, the game will ask you to sign a transaction
 Once you sign the transaction you will be added to the wheel.
 You should see the first 5 digits of your public address followed by a number 0 which is the status of the transaction, it will change to 1 once your transaction gets confirmed.
 If the transaction is not confirmed within 2 minutes you will be automatically removed from the wheel.
-If you status already changed to 1 (confirmed), you just need to wait until all the players join. 
-We are currently testing with 4 players so we need 4 for a game to start.
+If you status already changed to 1 (confirmed), you just need to wait until the timer ends. 
 The wheel should start to spin automatically if you are connected at the time of the winner selection.
 If you are not connected you will miss the animation but you will be considered for the game anyway and if you win you will get the prize.
 The winner gets the horny tokens from all the players that joined, you can check the transactions from the game wallet on solscan.
-When the game ends, all the players will be removed from the wheel and you will be able to re-join.
+When the game ends, all the players will be removed from the wheel until another game is started by an admin.
 Game Wallet: 5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn
 If you have any questions, ask on telegram chat. Have fun!`;
 
