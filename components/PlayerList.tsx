@@ -10,22 +10,60 @@ import WheelComponent, { SegmentObject } from './WheelComponent2';
 import dynamic from 'next/dynamic';
 import Popup from './Popup';
 
-const gameInstructions = `Welcome to the $Horny game! \n\t
+const gameInstructions = `<!DOCTYPE html>
+<div>
+  <p><strong>Starting a Game:</strong></p>
+  <ul>
+	<li>Only mods can start a game through the Horny Wheel bot on our main TG chat.</li>
+	<li>The "Join Game" button is only available when a game is running.</li>	
+    <li>If there's no game open, please ask for a game on the main chat, we are happy to start and join as well to show you how it works.</li>
+    <li>When a mod starts a game, a time in minutes is given to the bot, the wheel will spin after the amount of minutes given.</li>
+    <li>The mod can also set the amount of $Horny tokens to be gambled on that game, it will show the amount on the bot message and on top of the wheel.</li>	
+  </ul>
+  <p><strong>Connecting Your Wallet:</strong></p>
+  <ul>
+	<li>You need a Solana wallet, the ones we tested with so far are Phantom and Solflare.</li>
+    <li>Ensure your wallet contains $Horny tokens and some SOL for gas.</li>    
+  </ul>
 
-To play the game you need to connect a wallet that has your $Horny tokens and some SOL for gas.
-Connecting your wallet won't give the app full control, it will only be able to see your public key and ask you to sign transactions. 
-If you have safety concerns please create a temporary wallet, transfer $Horny tokens and cents in SOL for gas.
-After connecting you can click join, the game will ask you to sign a transaction for X amount of Horny tokens. 
-Once you sign the transaction you will be added to the wheel.
-You should see the first 5 digits of your public address followed by a number 0 which is the status of the transaction, it will change to 1 once your transaction gets confirmed.
-If the transaction is not confirmed within 2 minutes you will be automatically removed from the wheel.
-If you status already changed to 1 (confirmed), you just need to wait until the timer ends. 
-The wheel should start to spin automatically if you are connected at the time of the winner selection.
-If you are not connected you will miss the animation but you will be considered for the game anyway and if you win you will get the prize.
-The winner gets the horny tokens from all the players that joined, you can check the transactions from the game wallet on solscan.
-When the game ends, all the players will be removed from the wheel until another game is started by an admin.
-Game Wallet: 5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn
-If you have any questions, ask on telegram chat. Have fun!`;
+  <p><strong>Safety Concerns:</strong></p>
+  <ul>
+	<li>Connecting your wallet will not give the app full control; it will only be able to see your public key and ask you to sign transactions.</li>  
+    <li>If you are concerned, create a temporary wallet and transfer $Horny tokens along with a tiny amount of SOL for gas.</li>
+  </ul>
+
+  <p><strong>Joining the Game:</strong></p>
+  <ul>
+    <li>After connecting your wallet, click "Join Game".</li>
+    <li>The game will ask you to sign a transaction for X $Horny tokens.</li>
+  </ul>
+
+  <p><strong>Transaction Confirmation:</strong></p>
+  <ul>
+    <li>Once you sign the transaction, you will be added to the wheel.</li>
+    <li>You should see the first 5 digits of your public address followed by a number "0" indicating the transaction status.</li>
+    <li>The status will change to "1" once your transaction gets confirmed by the blockchain.</li>
+	<li>If the transaction simulation fails for some reason like not having gas or enough $Horny you will be removed immediately from the wheel.</li>
+    <li>If the transaction is not confirmed within 2 minutes, you will be automatically removed from the wheel.</li>
+  </ul>
+
+  <p><strong>Game Start:</strong></p>
+  <ul>
+    <li>The wheel will spin automatically if you are connected to the game when the timer reaches 0.</li>
+    <li>If you are not connected, you will miss the animation but still be considered for the game. If you win, you will get the prize.</li>
+	<li>The winner selection is completely random, for those of you who know a bit of coding, it uses Math.Random to get an index on the list of players.</li>
+  </ul>
+
+  <p><strong>Winner Announcement:</strong></p>
+  <ul>
+	<li>The address of the winning wallet will be announced on our TG by the horny wheel bot.</li>
+    <li>The winner gets the $Horny tokens from all the players that joined.</li>
+    <li>You can check the transactions from the game wallet on Solscan to verify that the prize was sent.</li>
+    <li>After the winner is announced the game will close and all players kicked out, the mods can then start a new game.</li>	
+  </ul>
+
+  <p><strong>Game Wallet:</strong><br>5tky6gYsmZonaWbkregUFxt39AZzqrE9WLCdgEd5vdLn</p>
+</div>`;
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -52,7 +90,7 @@ export default function PlayerList() {
     const MINT_ADDRESS = '2hnFpwft7BRhh7fcbkqaLzXubn76jNJNSyTZwdtDpump'; 
 
     useEffect(() => {
-        socket.on('updateUsers', (gameState: GameState) => {            
+        socket.on('updateUsers', (gameState: GameState) => {   
             settransferAmount(gameState.entryValue);
             setGameStatus(gameState.status);
             setSegments( segments.map((s, index) => gameState.users[index] ? {text: gameState.users[index].id, status: gameState.users[index].status } : emptySegments[index]) );
@@ -101,6 +139,11 @@ export default function PlayerList() {
         socket.emit('payTransaction', transaction);
     }
 
+    const getTransferAmount = async () => {
+      let response = await fetch('https://solanabackend.onrender.com/entryFee');
+      return await response.json();
+    }
+
     const joinTransfer =  async () => {      
         try
         {
@@ -115,13 +158,14 @@ export default function PlayerList() {
             false);
       
           let numberofDecimals = 6;//await getNumberDecimals(MINT_ADDRESS);
+          let entryFee = await getTransferAmount();
       
           const tx = new Transaction();
           tx.add(createTransferInstruction(
             sourceAccount,
             destinationAccount,
             new PublicKey(publicKey!.toString()),
-            transferAmount * Math.pow(10, numberofDecimals)
+            entryFee * Math.pow(10, numberofDecimals)
           ));
       
           const { blockhash } = await connection.getLatestBlockhash("confirmed");
@@ -145,7 +189,7 @@ export default function PlayerList() {
       const onFinished = (winner: string) => {
         toast('The winner is: ' + winner);
       }
-    
+
     return(        
         <div style={{"height" : "100%", "width" : "100%"}}>
             <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'flex-start'}}>
