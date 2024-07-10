@@ -141,7 +141,8 @@ export default function PlayerList() {
 
     const getTransferAmount = async () => {
       let response = await fetch('https://solanabackend.onrender.com/entryFee');
-      return await response.json();
+      let result = await response.json();       
+      return result.entryFee;
     }
 
     const joinTransfer =  async () => {      
@@ -183,6 +184,7 @@ export default function PlayerList() {
           }    
         }catch (error) {
             console.log(error);
+            socket.emit('remove', publicKey!.toString());
         }
       }
 
