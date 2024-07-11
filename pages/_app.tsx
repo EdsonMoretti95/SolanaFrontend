@@ -16,7 +16,6 @@ import { ToastContainer } from 'react-toastify';
 import '@solana/wallet-adapter-react-ui/styles.css';
 import 'react-toastify/dist/ReactToastify.css';
 import '../styles/globals.css';
-import axios from 'axios';
 
 export default function App({ Component, pageProps }: AppProps) {
   const endpoint = 'https://evocative-sparkling-leaf.solana-mainnet.quiknode.pro/79735600ada1b45856cc7a3835686c46503cef48/';
@@ -31,11 +30,11 @@ export default function App({ Component, pageProps }: AppProps) {
   );
 
   return (
-    <>
+    <> 
       <WalletProvider wallets={wallets}>
         <ConnectionProvider endpoint={endpoint}>
           <WalletModalProvider>
-            <Component {...pageProps} />
+            <Component {...pageProps} style={{innerHeight: '100%'}} />
           </WalletModalProvider>
         </ConnectionProvider>
       </WalletProvider>

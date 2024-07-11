@@ -2,15 +2,21 @@ button.wallet-adapter-button-trigger {
   cursor: pointer;
   color: white !important;
   border: none !important;
-  border-radius: 5% !important;
-  background-color: #ab9ff2 !important;
+  background-color: #f797ee !important;
   padding: 15px 15px;
   font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wallet-adapter-dropdown{
+  width: 80%;
 }
 
 button.wallet-adapter-button-trigger:hover {
   background-color: white !important;
-  color: #ab9ff2 !important;
+  color: #f797ee !important;
 }
 
 button.button {
@@ -18,9 +24,10 @@ button.button {
   color: white !important;
   border: none !important;
   border-radius: 5% !important;
-  background-color: #ab9ff2 !important;
+  background-color: #f797ee !important;
   padding: 15px 10px;
   font-size: 15px;
+  font-weight: bold;
 }
 
 button.button:disabled{
@@ -34,7 +41,7 @@ button.button:disabled:hover{
 
 button.button:hover {
   background-color: white !important;
-  color: #ab9ff2 !important;
+  color: #f797ee !important;
 }
 
 .popup-overlay {
@@ -66,7 +73,7 @@ button.button:hover {
   display: block;
   margin: 20px auto 0;
   padding: 10px 20px;
-  background: #007bff;
+  background: #f797ee;
   color: #fff;
   border: none;
   border-radius: 4px;
@@ -74,5 +81,31 @@ button.button:hover {
 }
 
 .popup button:hover {
-  background: #0056b3;
+  background: #f797ee;
+}
+
+body {
+  width: 400px;
+  height: 100%;
+  /*use media to set it to different sizes based on device screen*/
+}
+
+#__next{
+  height: 100%;
+}
+
+/* Ensure the full height is used and centered vertically */
+html {  
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(#ffffff, #dfdfdf);
+  height: 100%;
+}
+
+h1 {
+  border: none;
+  padding: 0;
+  margin: 0;
 }

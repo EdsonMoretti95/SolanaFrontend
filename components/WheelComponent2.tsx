@@ -2,7 +2,7 @@ import React, { useEffect, useState, useImperativeHandle, forwardRef } from "rea
 
 const primaryColor = 'black';
 const fontFamily = 'proxima-nova';
-const segColors = ['#ffffff', '#c800a5', '#ffffff', '#0486d2', '#ffffff', '#c800a5', '#ffffff', '#0486d2', '#ffffff', '#c800a5', '#ffffff', '#0486d2'];
+const segColors = ['#ffffff', '#fc74c0', '#ffffff', '#0486d2', '#ffffff', '#fc74c0', '#ffffff', '#0486d2', '#ffffff', '#fc74c0', '#ffffff', '#0486d2'];
 const numSegments = 12;
 
 export interface SegmentObject {
@@ -31,7 +31,12 @@ const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps,
 
     useEffect(() => {
         const handleResize = () => {
-            const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            //const size = Math.min(window.innerWidth, window.innerHeight) * 0.9;
+            const bodyWidth = document.body.getBoundingClientRect().width;
+            const bodyHeight = document.body.getBoundingClientRect().height;
+            
+            // Calculate the size using the smaller of the body width or height
+            const size = Math.min(bodyWidth, bodyHeight);            
             setCanvasSize(size);
         };
 
@@ -104,10 +109,11 @@ const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps,
     };
 
     const renderSegments = () => {
-        const radius = canvasSize / 2 * 0.95;
+        const radius = canvasSize / 2 * 0.90;
         const centerX = canvasSize / 2;
         const centerY = canvasSize / 2;
         const anglePerSegment = (2 * Math.PI) / numSegments;
+        const circleRadius = canvasSize / 100;
 
         return segments.map((segment, index) => {
             const startAngle = anglePerSegment * index + angleCurrent;
@@ -122,13 +128,25 @@ const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps,
             const textY = centerY + (radius / 1.5) * Math.sin(textAngle);
             const needleSize = canvasSize / 10;
 
+            const circleDistance = 9; // Distance from segments (adjust as needed)
+            const circleX = centerX + (radius + circleDistance) * Math.cos(anglePerSegment * index);
+            const circleY = centerY + (radius + circleDistance) * Math.sin(anglePerSegment * index);
+            const circleX2 = centerX + (radius + circleDistance) * Math.cos(anglePerSegment * index + anglePerSegment / 2);
+            const circleY2 = centerY + (radius + circleDistance) * Math.sin(anglePerSegment * index + anglePerSegment / 2);
+
             return (
                 <g key={index}>
                     <path
                         d={`M${centerX},${centerY} L${x1},${y1} A${radius},${radius} 0 ${largeArcFlag},1 ${x2},${y2} Z`}
                         fill={segColors[index]}
-                    />
+                    />                                     
                     <path d={`M${centerX - 15},${0} L${centerX},${needleSize} L${centerX + 15},${0} Z`} stroke={'black'}/>
+                    <circle cx={circleX} cy={circleY} r={circleRadius} fill="#fc74c0" className="light-effect">
+                        <animate attributeName="opacity" from="1" to="0" dur="2s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx={circleX2} cy={circleY2} r={circleRadius} fill="#0486d2" className="light-effect-opposite">
+                        <animate attributeName="opacity" from="0" to="1" dur="2s" repeatCount="indefinite"/>
+                    </circle>
                     <text
                         x={textX}
                         y={textY}
@@ -148,28 +166,26 @@ const WheelComponent = forwardRef(({segments, onFinished} : WheelComponentProps,
     };
 
     return (
-        <div id="wheel" style={{marginTop: '3Vh',  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>            
-            <svg
+        <div id="wheel" style={{marginTop: '20px',  display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start' }}>            
+            <svg xmlns="http://www.w3.org/2000/svg"
                 id="svg"
                 width={canvasSize}
                 height={canvasSize}
-                viewBox={`0 0 ${canvasSize+10} ${canvasSize+10}`}
-            >
+                viewBox={`0 0 ${canvasSize} ${canvasSize}`}
+            >                                                 
                 <circle
                     cx={canvasSize / 2}
                     cy={canvasSize / 2}
                     r={canvasSize / 2 * 0.99}
-                    fill="#f797ee"
-                    stroke="#f797ee"
-                    strokeWidth="2"
+                    fill="#505050"
                 />                
                 <path d={`M${canvasSize/2},0 L`}/>
                 {renderSegments()}
                 <circle
                     cx={canvasSize / 2}
                     cy={canvasSize / 2}
-                    r={canvasSize * 0.04}
-                    fill="#f797ee"
+                    r={canvasSize * 0.05}
+                    fill="#505050"
                     stroke="white"
                     strokeWidth="5"
                 />

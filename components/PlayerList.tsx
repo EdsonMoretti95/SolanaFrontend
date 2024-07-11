@@ -193,19 +193,24 @@ export default function PlayerList() {
       }
 
     return(        
-        <div style={{"height" : "100%", "width" : "100%"}}>
-            <div style={{ display: 'flex', justifyContent: 'space-evenly', alignItems: 'flex-start'}}>
-                <WalletMultiButtonDynamic />
-                <button className='button' onClick={showPopup}>Instructions</button>                
-                <button onClick={joinGame} disabled={publicKey != null && gameStatus !== 0 ? false : true} className='button'>Join Game</button>
-                {isPopupVisible && (<Popup message={gameInstructions} onClose={closePopup} />)}
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center',  height : "100%", width : "100%"}}>
+            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'space-between', alignItems: 'center'}}>
+              <h1>Welcome to $Horny</h1>          
+              <h1>Spin and Win</h1>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <label hidden={gameStatus === -1}>{gameStatus === 0 ? 'no game open' : `game open for ${transferAmount} $Horny`}</label>
-            </div>            
-            <div id="wheelComponent" style={{ display: 'flex', justifyContent: 'center', alignItems: 'flex-start', height: '93vh', width: '100vw' }}>
+            <div id="wheelComponent" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center'}}>
                 <WheelComponent ref={wheelRef} segments={segments} onFinished={onFinished}/>
-            </div>        
+            </div>            
+            <label>{gameStatus === 0 ? 'no game open' : gameStatus === -1 ? 'connecting...' : `game open for ${transferAmount} $Horny`}</label>            
+            <WalletMultiButtonDynamic style={{width: '100%'}}>
+                    {publicKey != null ? `Connected to ${publicKey.toString().substr(0, 5)}...` : 'Connect Wallet'}
+            </WalletMultiButtonDynamic> 
+            <button className='button' onClick={showPopup} style={{width: '80%'}}>Instructions</button>                
+            <button onClick={joinGame} style={{width: '80%'}} disabled={publicKey != null && gameStatus !== 0 ? false : true} className='button'>Join Game</button>                                   
+            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '80%'}}>
+
+                </div>            
+            {isPopupVisible && (<Popup message={gameInstructions} onClose={closePopup} />)}
         </div>
         
     );
